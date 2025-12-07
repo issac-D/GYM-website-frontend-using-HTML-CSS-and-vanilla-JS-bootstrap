@@ -1,224 +1,213 @@
-let admin = {
-            fullName: "Admin User",
-            username: "dbu_admin",
-            phone: "0911000000",
-            email: "admin@dbugym.com",
-            role: "Administrator",
-            adminId: "ADM-001",
-            defaultPricing: {
-                monthly: 300,
-                threeMonths: 800,
-                sixMonths: 1500,
-                yearly: 2500
-            },
-            allowedDurations: ["monthly", "yearly"],
-            openingHours: "Mon-Fri: 6am - 10pm, Sat-Sun: 8am - 6pm",
-            announcementMessage: "Welcome back! The new sauna is now open on the 3rd floor."
-        };
-        
-        // --- Core Functions ---
-
-        document.addEventListener('DOMContentLoaded', initAdminPage);
-
-        function initAdminPage() {
-            setupThemeToggle();
-            loadAdminData();
-            setupFormInteractions();
-        }
-
-        // --- Theme Toggle Logic (Reused for consistency) ---
-        function setupThemeToggle() {
-            const body = document.body;
-            const themeToggle = document.getElementById('theme-toggle');
-            const icon = themeToggle.querySelector('i');
-            const savedTheme = localStorage.getItem('admin-theme');
+document.addEventListener('DOMContentLoaded', async () => {
             
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-mode');
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            } else {
-                 icon.classList.remove('fa-sun');
-                 icon.classList.add('fa-moon');
+            // --- 0. Authentication Check ---
+            const sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+            const userRole = localStorage.getItem('userRole');
+
+            if (!sessionUser || userRole !== 'admin') {
+                window.location.href = '../../login/login.html';
+                return;
             }
 
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-mode');
-                
-                if (body.classList.contains('dark-mode')) {
-                    icon.classList.remove('fa-moon');
-                    icon.classList.add('fa-sun');
-                    localStorage.setItem('admin-theme', 'dark');
-                } else {
-                    icon.classList.remove('fa-sun');
-                    icon.classList.add('fa-moon');
-                    localStorage.setItem('admin-theme', 'light');
+            const ADMIN_API_URL = `http://localhost:3000/admins/${sessionUser.id}`;
+            const SETTINGS_API_URL = `http://localhost:3000/settings`;
+            
+            let currentAdminData = {};
+
+            // --- 1. Load Data ---
+            async function initData() {
+                try {
+                    // Fetch Admin Data
+                    const adminRes = await fetch(ADMIN_API_URL);
+                    currentAdminData = await adminRes.json();
+                    
+                    // Fetch Settings Data
+                    const settingsRes = await fetch(SETTINGS_API_URL);
+                    const settingsData = await settingsRes.json();
+
+                    // --- Populate Admin Profile ---
+                    document.getElementById('adminNameHeader').textContent = currentAdminData.fullName;
+                    document.getElementById('adminIdHeader').textContent = `ID: ${currentAdminData.id}`;
+                    document.getElementById('profileNameDisplay').innerHTML = `<i class="fas fa-user-shield me-1"></i> ${currentAdminData.fullName.split(' ')[0]}`;
+
+                    if(currentAdminData.profileImage && currentAdminData.profileImage.startsWith('data:image')){
+                        document.getElementById('profilePicturePreview').innerHTML = `<img src="${currentAdminData.profileImage}" alt="Profile">`;
+                    }
+
+                    document.getElementById('fullName').value = currentAdminData.fullName;
+                    document.getElementById('username').value = currentAdminData.username;
+                    document.getElementById('email').value = currentAdminData.email;
+                    document.getElementById('phone').value = currentAdminData.phone;
+                    document.getElementById('adminId').value = currentAdminData.id;
+                    document.getElementById('role').value = currentAdminData.position || 'Admin';
+
+                    // --- Populate Settings ---
+                    document.getElementById('announcementMessage').value = settingsData.announcementMessage || '';
+                    document.getElementById('openingHours').value = settingsData.openingHours || '';
+                    
+                    if(settingsData.defaultPricing) {
+                        document.getElementById('priceMonthly').value = settingsData.defaultPricing.monthly;
+                        document.getElementById('priceThreeMonths').value = settingsData.defaultPricing.threeMonths;
+                        document.getElementById('priceSixMonths').value = settingsData.defaultPricing.sixMonths;
+                        document.getElementById('priceYearly').value = settingsData.defaultPricing.yearly;
+                    }
+
+                } catch (error) {
+                    console.error("Error loading data:", error);
+                    alert("Failed to load profile or settings data.");
                 }
-            });
-        }
-
-        // --- Load & Display Admin Data ---
-        function loadAdminData() {
-            // Update Headers
-            document.getElementById('adminNameHeader').textContent = admin.fullName;
-            document.getElementById('adminIdHeader').textContent = `ID: ${admin.adminId}`;
-            document.getElementById('profileNameDisplay').innerHTML = `<i class="fas fa-user-shield me-1"></i> ${admin.fullName.split(' ')[0]}`;
-
-
-            // B. Pre-fill Admin Profile Forms
-            document.getElementById('fullName').value = admin.fullName;
-            document.getElementById('username').value = admin.username;
-            document.getElementById('email').value = admin.email;
-            document.getElementById('phone').value = admin.phone;
-            document.getElementById('adminId').value = admin.adminId;
-            document.getElementById('role').value = admin.role;
-            
-            // D. Pre-fill Admin Settings Forms
-            document.getElementById('announcementMessage').value = admin.announcementMessage;
-            document.getElementById('openingHours').value = admin.openingHours;
-            
-            // Pricing
-            document.getElementById('priceMonthly').value = admin.defaultPricing.monthly;
-            document.getElementById('priceThreeMonths').value = admin.defaultPricing.threeMonths;
-            document.getElementById('priceSixMonths').value = admin.defaultPricing.sixMonths;
-            document.getElementById('priceYearly').value = admin.defaultPricing.yearly;
-            
-            // Allowed Durations
-            const durationCheckboxes = document.querySelectorAll('#settingsForm input[type="checkbox"]');
-            durationCheckboxes.forEach(checkbox => {
-                checkbox.checked = admin.allowedDurations.includes(checkbox.value);
-            });
-        }
-
-        // --- Form Interactions and Validation ---
-        function setupFormInteractions() {
-            const profileForm = document.getElementById('profileForm');
-            const passwordForm = document.getElementById('passwordForm');
-            const settingsForm = document.getElementById('settingsForm');
-            const saveAlert = document.getElementById('saveAlert');
-            const passwordAlert = document.getElementById('passwordAlert');
-
-            function displaySuccess(message) {
-                saveAlert.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${message}`;
-                saveAlert.classList.remove('d-none', 'alert-danger');
-                saveAlert.classList.add('alert-success');
-                setTimeout(() => {
-                    saveAlert.classList.add('d-none');
-                }, 4000);
             }
-
-            // F. Save Admin Profile Changes
-            profileForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                
-                // 1. Collect new data
-                const updatedAdmin = {
-                    fullName: document.getElementById('fullName').value,
-                    username: document.getElementById('username').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phone').value,
-                };
-
-                // 2. Merge and (Placeholder) Save
-                admin = { ...admin, ...updatedAdmin };
-                console.log('Admin Profile Updated:', admin);
-
-                // 3. Display Success Message
-                displaySuccess('Admin profile updated successfully!');
-
-                // Re-load data to ensure headers/previews are refreshed
-                loadAdminData();
-            });
             
-            // F. Save Admin Settings Changes
-            settingsForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                
-                // 1. Collect new data
-                const newPricing = {
-                    monthly: parseFloat(document.getElementById('priceMonthly').value),
-                    threeMonths: parseFloat(document.getElementById('priceThreeMonths').value),
-                    sixMonths: parseFloat(document.getElementById('priceSixMonths').value),
-                    yearly: parseFloat(document.getElementById('priceYearly').value),
-                };
-                
-                const newDurations = Array.from(document.querySelectorAll('#settingsForm input[type="checkbox"]:checked'))
-                                          .map(cb => cb.value);
-
-                const updatedSettings = {
-                    defaultPricing: newPricing,
-                    openingHours: document.getElementById('openingHours').value,
-                    announcementMessage: document.getElementById('announcementMessage').value,
-                    allowedDurations: newDurations
-                };
-
-                // 2. Merge and (Placeholder) Save
-                admin = { ...admin, ...updatedSettings };
-                console.log('System Settings Updated:', updatedSettings);
-
-                // 3. Display Success Message
-                displaySuccess('System configuration applied successfully!');
-            });
+            // Setup Theme & Logout (Standard logic)
+            setupThemeAndLogout();
+            
+            // Initialize
+            await initData();
 
 
-            // C. Change Password
-            passwordForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                passwordAlert.classList.add('d-none');
-                passwordAlert.classList.remove('alert-success', 'alert-danger');
-
-                const currentPass = document.getElementById('currentPassword').value;
-                const newPass = document.getElementById('newPassword').value;
-                const confirmPass = document.getElementById('confirmNewPassword').value;
-
-                // Simple placeholder validation (e.g., check length and mock current password)
-                const MOCK_CURRENT_PASSWORD = 'adminpass'; 
-
-                if (currentPass !== MOCK_CURRENT_PASSWORD) {
-                    passwordAlert.textContent = 'Error: The current password you entered is incorrect.';
-                    passwordAlert.classList.add('alert-danger');
-                    passwordAlert.classList.remove('d-none');
-                    return;
-                }
-
-                if (newPass.length < 8) {
-                    passwordAlert.textContent = 'Error: New password must be at least 8 characters long.';
-                    passwordAlert.classList.add('alert-danger');
-                    passwordAlert.classList.remove('d-none');
-                    return;
-                }
-
-                if (newPass !== confirmPass) {
-                    passwordAlert.textContent = 'Error: New password and confirmation do not match.';
-                    passwordAlert.classList.add('alert-danger');
-                    passwordAlert.classList.remove('d-none');
-                    return;
-                }
-
-                // If validation passes (Placeholder for actual API call)
-                console.log('Admin password successfully changed.');
-                passwordAlert.textContent = 'Success! Admin password has been updated.';
-                passwordAlert.classList.add('alert-success');
-                passwordAlert.classList.remove('d-none');
-
-                // Clear fields
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmNewPassword').value = '';
-            });
-
-            // E. Profile Picture Upload Preview (Placeholder)
+            // --- 2. Update Profile Picture ---
             const photoInput = document.getElementById('profilePictureInput');
-            const photoPreview = document.getElementById('profilePicturePreview');
-            
+            const btnUpdatePic = document.getElementById('btnUpdatePicture');
+
             photoInput.addEventListener('change', function() {
                 if (this.files && this.files[0]) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
-                        // Replace the icon with an image tag
-                        photoPreview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; border-radius:50%;" alt="Profile Preview">`;
-                    }
+                    reader.onload = (e) => document.getElementById('profilePicturePreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
                     reader.readAsDataURL(this.files[0]);
                 }
             });
-        }
+
+            btnUpdatePic.addEventListener('click', async () => {
+                if (photoInput.files.length === 0) return alert("Select an image first.");
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    await updateAdminField({ profileImage: reader.result }, "Profile picture updated!");
+                    location.reload(); // Refresh to update headers
+                };
+                reader.readAsDataURL(photoInput.files[0]);
+            });
+
+
+            // --- 3. Save Admin Profile Info ---
+            document.getElementById('profileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const updatedData = {
+                    fullName: document.getElementById('fullName').value,
+                    username: document.getElementById('username').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value
+                };
+                await updateAdminField(updatedData, "Profile details updated.");
+            });
+
+
+            // --- 4. Change Password ---
+            document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const alertBox = document.getElementById('passwordAlert');
+                alertBox.className = 'alert d-none'; 
+                
+                const oldPass = document.getElementById('currentPassword').value;
+                const newPass = document.getElementById('newPassword').value;
+                const confirmPass = document.getElementById('confirmNewPassword').value;
+
+                if (oldPass !== currentAdminData.password) {
+                    showAlert(alertBox, "Incorrect current password.", "danger");
+                    return;
+                }
+                if (newPass.length < 5) {
+                    showAlert(alertBox, "Password too short.", "danger");
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    showAlert(alertBox, "Passwords do not match.", "danger");
+                    return;
+                }
+
+                await updateAdminField({ password: newPass }, "Password changed successfully!");
+                document.getElementById('passwordForm').reset();
+                currentAdminData.password = newPass; // Update local ref
+            });
+
+
+            // --- 5. Save System Config (Settings) ---
+            document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const configData = {
+                    announcementMessage: document.getElementById('announcementMessage').value,
+                    openingHours: document.getElementById('openingHours').value,
+                    defaultPricing: {
+                        monthly: Number(document.getElementById('priceMonthly').value),
+                        threeMonths: Number(document.getElementById('priceThreeMonths').value),
+                        sixMonths: Number(document.getElementById('priceSixMonths').value),
+                        yearly: Number(document.getElementById('priceYearly').value)
+                    }
+                };
+
+                try {
+                    const res = await fetch(SETTINGS_API_URL, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(configData)
+                    });
+                    if(res.ok) {
+                        showGlobalSuccess("Business configuration updated.");
+                    }
+                } catch(err) {
+                    alert("Failed to update configuration.");
+                }
+            });
+
+
+            // --- Helper Functions ---
+
+            async function updateAdminField(data, successMsg) {
+                try {
+                    const res = await fetch(ADMIN_API_URL, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (res.ok) showGlobalSuccess(successMsg);
+                    else throw new Error("API Error");
+                } catch (err) {
+                    alert("Update failed.");
+                }
+            }
+
+            function showGlobalSuccess(msg) {
+                const alert = document.getElementById('saveAlert');
+                alert.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${msg}`;
+                alert.classList.remove('d-none');
+                setTimeout(() => alert.classList.add('d-none'), 3000);
+            }
+
+            function showAlert(element, msg, type) {
+                element.textContent = msg;
+                element.classList.add(`alert-${type}`);
+                element.classList.remove('d-none');
+            }
+
+            function setupThemeAndLogout() {
+                const body = document.body;
+                const toggle = document.getElementById('theme-toggle');
+                const icon = toggle.querySelector('i');
+                const theme = localStorage.getItem('admin-theme');
+                if(theme === 'dark') { body.classList.add('dark-mode'); icon.className = 'fas fa-sun'; }
+                
+                toggle.addEventListener('click', () => {
+                    body.classList.toggle('dark-mode');
+                    const isDark = body.classList.contains('dark-mode');
+                    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+                });
+
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('userRole');
+                    window.location.href = '../../login/login.html';
+                });
+            }
+
+        });

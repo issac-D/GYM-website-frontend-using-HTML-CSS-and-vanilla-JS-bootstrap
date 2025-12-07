@@ -122,4 +122,5 @@
             background-color: var(--bg-alt, #f9f9f9);
             padding: 8px;
             border-radius: 6px;
+            color: #333;
         }

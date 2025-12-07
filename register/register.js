@@ -1,6 +1,4 @@
-let registrationCounter = 1;
-        
-        document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
             const body = document.body;
             const themeToggle = document.getElementById('theme-toggle');
             const icon = themeToggle.querySelector('i');
@@ -12,10 +10,21 @@ let registrationCounter = 1;
             const gymIdDisplay = document.getElementById('gymIdDisplay');
             
             let currentMemberType = 'university';
+            let nextIdCounter = 1;
 
-            // --- 1. Theme Setup (Light/Dark Mode) ---
+            // --- 1. Fetch Current User Count (For ID Generation) ---
+            try {
+                const res = await fetch('http://localhost:3000/users');
+                const users = await res.json();
+                nextIdCounter = users.length + 1;
+                updateGymIdDisplay();
+            } catch (err) {
+                console.error("Failed to connect to JSON Server:", err);
+                gymIdDisplay.textContent = "Error: Start JSON Server";
+            }
+
+            // --- 2. Theme Setup ---
             const savedTheme = localStorage.getItem('theme');
-
             if (savedTheme === 'dark') {
                 body.classList.add('dark-mode');
                 icon.classList.remove('fa-moon');
@@ -24,7 +33,6 @@ let registrationCounter = 1;
 
             themeToggle.addEventListener('click', () => {
                 body.classList.toggle('dark-mode');
-                
                 if (body.classList.contains('dark-mode')) {
                     icon.classList.remove('fa-moon');
                     icon.classList.add('fa-sun');
@@ -36,118 +44,126 @@ let registrationCounter = 1;
                 }
             });
 
-            // --- 2. Gym ID Generation ---
-            function generateGymId(type) {
-                const prefix = type === 'university' ? 'DBU' : 'EXT';
+            // --- 3. Gym ID Generation Logic ---
+            function updateGymIdDisplay() {
+                const prefix = currentMemberType === 'university' ? 'DBU' : 'EXT';
                 const year = new Date().getFullYear();
-                
-                // Format counter to 4 digits (0001, 0002, etc.)
-                const counter = String(registrationCounter).padStart(4, '0');
-                
-                return `${prefix}-${year}-${counter}`;
+                const counter = String(nextIdCounter).padStart(4, '0');
+                gymIdDisplay.textContent = `${prefix}-${year}-${counter}`;
             }
 
-            // --- 3. Dynamic Field Toggling ---
+            // --- 4. Dynamic Field Toggling ---
             function toggleMemberType(type) {
                 currentMemberType = type;
-                
-                // Set active button style
                 typeUniBtn.classList.toggle('active', type === 'university');
                 typeExtBtn.classList.toggle('active', type === 'external');
-                
-                // Show/Hide fields
                 uniFields.classList.toggle('d-none', type === 'external');
                 extFields.classList.toggle('d-none', type === 'university');
 
-                // Update Gym ID Preview
-                gymIdDisplay.textContent = generateGymId(type);
+                updateGymIdDisplay();
 
-                // Set required attribute based on visible fields
                 document.getElementById('uniID').required = (type === 'university');
                 document.getElementById('department').required = (type === 'university');
                 document.getElementById('nationalID').required = (type === 'external');
                 document.getElementById('address').required = (type === 'external');
-                
-                // Remove existing validation feedback from hidden fields
-                Array.from(uniFields.querySelectorAll('.form-control')).forEach(el => el.classList.remove('is-invalid'));
-                Array.from(extFields.querySelectorAll('.form-control')).forEach(el => el.classList.remove('is-invalid'));
             }
 
-            // Initial setup
-            toggleMemberType('university');
-
-            // Event listeners for buttons
             typeUniBtn.addEventListener('click', () => toggleMemberType('university'));
             typeExtBtn.addEventListener('click', () => toggleMemberType('external'));
 
-            // --- 4. Form Validation and Submission ---
-            form.addEventListener('submit', function (e) {
+            // --- 5. Helper: Convert Image to Base64 ---
+            const convertToBase64 = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = (error) => reject(error);
+                });
+            };
+
+            // --- 6. Helper: Calculate Expiry Date ---
+            const calculateExpiry = (planType) => {
+                const date = new Date();
+                if (planType === 'Monthly') date.setMonth(date.getMonth() + 1);
+                else if (planType === '3Months') date.setMonth(date.getMonth() + 3);
+                else if (planType === '6Months') date.setMonth(date.getMonth() + 6);
+                else if (planType === '1Year') date.setFullYear(date.getFullYear() + 1);
+                return date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+            };
+
+            // --- 7. Form Submission ---
+            form.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                let isValid = true;
-                
-                // Manually validate all visible required fields
-                const requiredInputs = form.querySelectorAll('[required]:not([disabled]):not([hidden])');
-                
-                requiredInputs.forEach(input => {
-                    if (input.value.trim() === '') {
-                        input.classList.add('is-invalid');
-                        isValid = false;
-                    } else {
-                        input.classList.remove('is-invalid');
-                    }
-                });
-
-                if (isValid) {
-                    // Collect Data
-                    const formData = {
-                        memberId: gymIdDisplay.textContent,
-                        type: currentMemberType,
-                        fullName: document.getElementById('fullName').value,
-                        email: document.getElementById('email').value,
-                        phoneNumber: document.getElementById('phoneNumber').value,
-                        membershipType: document.getElementById('membershipType').value,
-                    };
-                    
-                    if (currentMemberType === 'university') {
-                        formData.uniID = document.getElementById('uniID').value;
-                        formData.department = document.getElementById('department').value;
-                    } else {
-                        formData.nationalID = document.getElementById('nationalID').value;
-                        formData.address = document.getElementById('address').value;
-                    }
-
-                    // --- SUCCESS LOGIC ---
-                    console.log('Registration Data:', formData);
-                    
-                    // Increment counter for next registration
-                    registrationCounter++;
-
-                    // Reset form and show success alert
-                    form.reset();
-                    form.classList.remove('was-validated'); // Prevent showing default browser validation
-                    
-                    // Show success modal/alert (using a Bootstrap alert for simplicity)
-                    const successAlert = `
-                        <div class="alert alert-success alert-dismissible fade show mt-4" role="alert">
-                            <strong>Success!</strong> Member ${formData.fullName} registered with ID: ${formData.memberId}.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    `;
-                    document.querySelector('.card').insertAdjacentHTML('afterend', successAlert);
-                    
-                    // Re-generate ID display for the next member
-                    gymIdDisplay.textContent = generateGymId(currentMemberType);
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return;
                 }
-            });
-            
-            // Re-validate fields on change (optional: cleans up the UI instantly)
-            form.querySelectorAll('.form-control, .form-select').forEach(input => {
-                input.addEventListener('input', () => {
-                    if (input.value.trim() !== '') {
-                        input.classList.remove('is-invalid');
+
+                // Handle Image Upload
+                const fileInput = document.getElementById('profileImage');
+                let base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="; // Default placeholder
+                
+                if (fileInput.files.length > 0) {
+                    try {
+                        base64Image = await convertToBase64(fileInput.files[0]);
+                    } catch (err) {
+                        console.error("Image conversion failed", err);
+                        alert("Failed to upload image.");
+                        return;
                     }
-                });
+                }
+
+                // Construct User Object
+                const today = new Date().toISOString().split('T')[0];
+                const planType = document.getElementById('membershipType').value;
+                const membershipId = gymIdDisplay.textContent;
+
+                const newUser = {
+                    role: "user",
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phoneNumber').value,
+                    password: document.getElementById('password').value,
+                    gender: document.getElementById('gender').value,
+                    profileImage: base64Image,
+                    
+                    isUniversityMember: (currentMemberType === 'university'),
+                    universityId: currentMemberType === 'university' ? document.getElementById('uniID').value : null,
+                    department: currentMemberType === 'university' ? document.getElementById('department').value : null,
+                    
+                    nationalId: currentMemberType === 'external' ? document.getElementById('nationalID').value : null,
+                    address: currentMemberType === 'external' ? document.getElementById('address').value : null,
+                    
+                    membershipId: membershipId,
+                    discountPercentage: (currentMemberType === 'university' ? 20 : 0),
+                    membershipType: planType,
+                    membershipStatus: "active",
+                    joinDate: today,
+                    expiryDate: calculateExpiry(planType),
+                    paymentStatus: "Paid" 
+                };
+
+                // Send POST Request
+                try {
+                    const response = await fetch('http://localhost:3000/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newUser)
+                    });
+
+                    if (response.ok) {
+                        alert(`Success! Member registered with ID: ${membershipId}. Redirecting to Login...`);
+                        window.location.href = '../login/login.html';
+                    } else {
+                        throw new Error('Server responded with error');
+                    }
+                } catch (error) {
+                    console.error("Registration failed:", error);
+                    alert("Registration failed. Ensure JSON Server is running.");
+                }
             });
         });
