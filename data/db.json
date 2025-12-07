@@ -1,0 +1,207 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "role": "user",
+      "fullName": "Abebe Kebede",
+      "email": "abebe@example.com",
+      "phone": "0911223344",
+      "gender": "Male",
+      "password": "password123",
+      "profileImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+      "isUniversityMember": true,
+      "universityId": "DBU/1234/12",
+      "nationalId": null,
+      "department": "Computer Science",
+      "membershipId": "DBU-2025-0001",
+      "discountPercentage": 20,
+      "membershipType": "Monthly",
+      "membershipStatus": "active",
+      "joinDate": "2025-11-01",
+      "expiryDate": "2025-12-01",
+      "paymentStatus": "Paid"
+    },
+    {
+      "id": "2",
+      "role": "user",
+      "fullName": "Sarah Jones",
+      "email": "sarah@example.com",
+      "phone": "0922334455",
+      "gender": "Female",
+      "password": "userpass",
+      "profileImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+      "isUniversityMember": false,
+      "universityId": null,
+      "nationalId": "NAT-987654",
+      "address": "Kebele 04, Debre Berhan",
+      "membershipId": "EXT-2025-0002",
+      "discountPercentage": 0,
+      "membershipType": "1 Year",
+      "membershipStatus": "active",
+      "joinDate": "2025-01-01",
+      "expiryDate": "2026-01-01",
+      "paymentStatus": "Paid"
+    },
+    {
+      "id": "3",
+      "role": "user",
+      "fullName": "Dawit Haile",
+      "email": "dawit@example.com",
+      "phone": "0933445566",
+      "gender": "Male",
+      "password": "expiredpass",
+      "profileImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+      "isUniversityMember": true,
+      "universityId": "DBU/5678/13",
+      "nationalId": null,
+      "department": "Civil Engineering",
+      "membershipId": "DBU-2025-0003",
+      "discountPercentage": 20,
+      "membershipType": "Monthly",
+      "membershipStatus": "expired",
+      "joinDate": "2025-09-01",
+      "expiryDate": "2025-10-01",
+      "paymentStatus": "Unpaid"
+    },
+    {
+      "id": "2d1a",
+      "role": "user",
+      "fullName": "Muluken Kassaww",
+      "email": "mule@gmail.com",
+      "phone": "+251965846596",
+      "password": "12345678",
+      "gender": "Male",
+      "profileImage": "data:image/jpeg;base64,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",
+      "isUniversityMember": false,
+      "universityId": null,
+      "department": null,
+      "nationalId": "54684654654546",
+      "address": "tebase",
+      "membershipId": "EXT-2025-0004",
+      "discountPercentage": 0,
+      "membershipType": "Monthly",
+      "membershipStatus": "active",
+      "joinDate": "2025-12-06",
+      "expiryDate": "2026-01-06",
+      "paymentStatus": "Paid"
+    }
+  ],
+  "admins": [
+    {
+      "id": "1",
+      "role": "admin",
+      "fullName": "System Administrator",
+      "username": "admin",
+      "email": "admin@admin",
+      "phone": "0900000000",
+      "password": "admin",
+      "profileImage": "data:image/jpeg;base64,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",
+      "position": "General Manager",
+      "themePreference": "light"
+    }
+  ],
+  "settings": {
+    "item": {
+      "item": {
+        "systemName": "DBU Gym Management System",
+        "maintenanceMode": false,
+        "language": "en",
+        "timezone": "UTC+3",
+        "twoFA": false,
+        "passwordPolicy": {
+          "minLength": 8,
+          "specialChars": true,
+          "expiryDays": 90
+        },
+        "sessionTimeout": 30,
+        "maxLoginAttempts": 3,
+        "emailNotifications": true,
+        "smsNotifications": false,
+        "senderEmail": "noreply@dbugym.com",
+        "apiKey": "sk_live_123456789",
+        "theme": "light",
+        "accentColor": "#51CCF9",
+        "layoutStyle": "comfortable",
+        "autoBackup": true,
+        "backupFrequency": "daily",
+        "defaultPricing": {
+          "monthly": 300,
+          "threeMonths": 800,
+          "sixMonths": 1500,
+          "yearly": 2500
+        },
+        "openingHours": "Mon-Fri: 6am - 10pm, Sat-Sun: 8am - 6pm",
+        "announcementMessage": "Welcome to DBU Gym! Please note maintenance on Sunday."
+      },
+      "announcementMessage": "Welcome to DBU Gym! Please note maintenance on Sunday.",
+      "openingHours": "Mon-Fri: 6am - 10pm, Sat-Sun: 8am - 6pm",
+      "defaultPricing": {
+        "monthly": 300,
+        "threeMonths": 800,
+        "sixMonths": 1500,
+        "yearly": 2500
+      }
+    },
+    "announcementMessage": "Welcome to DBU Gym! Please note maintenance on Sunday.",
+    "openingHours": "Mon-Fri: 6am - 10pm, Sat-Sun: 8am - 6pm",
+    "defaultPricing": {
+      "monthly": 300,
+      "threeMonths": 800,
+      "sixMonths": 1500,
+      "yearly": 2500
+    },
+    "systemName": "",
+    "language": "en",
+    "timezone": "UTC+3",
+    "maintenanceMode": false,
+    "twoFA": false,
+    "passwordPolicy": {
+      "minLength": null,
+      "expiryDays": null,
+      "specialChars": false
+    },
+    "sessionTimeout": 30,
+    "maxLoginAttempts": 3,
+    "emailNotifications": false,
+    "smsNotifications": false,
+    "senderEmail": "",
+    "apiKey": "",
+    "autoBackup": false,
+    "backupFrequency": "daily",
+    "theme": "dark",
+    "accentColor": "#51ccf9",
+    "layoutStyle": "comfortable"
+  },
+  "logs": [
+    {
+      "id": "1",
+      "userId": 1,
+      "action": "LOGIN",
+      "details": "User logged in successfully",
+      "timestamp": "2025-12-06T08:00:00Z"
+    },
+    {
+      "id": "2",
+      "userId": 2,
+      "action": "UPDATE_PROFILE",
+      "details": "Changed phone number",
+      "timestamp": "2025-12-05T14:30:00Z"
+    },
+    {
+      "id": "3",
+      "userId": 101,
+      "action": "ADMIN_DELETE_USER",
+      "details": "Deleted user ID 4",
+      "timestamp": "2025-12-04T09:15:00Z"
+    }
+  ],
+  "passwordResets": [
+    {
+      "id": "1",
+      "email": "sarah@example.com",
+      "token": "123456",
+      "requestedAt": "2025-12-06T10:00:00Z",
+      "status": "pending"
+    }
+  ]
+}
