@@ -49,6 +49,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (users.length > 0) {
                         const user = users[0];
+
+                        // --- APPROVAL CHECK LOGIC ---
+                        if (user.role !== 'admin') {
+                            if (user.membershipStatus === 'pending') {
+                                window.location.href = '../pending/pending.html';
+                                return;
+                            }
+                            if (user.membershipStatus === 'rejected') {
+                                alertBox.textContent = "Your account application was rejected. Please contact support.";
+                                alertBox.classList.remove('d-none');
+                                return;
+                            }
+                        }
+
                         // Save session details
                         localStorage.setItem('currentUser', JSON.stringify(user));
                         localStorage.setItem('userRole', 'user');

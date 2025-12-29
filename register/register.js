@@ -1,169 +1,153 @@
-document.addEventListener('DOMContentLoaded', async () => {
-            const body = document.body;
-            const themeToggle = document.getElementById('theme-toggle');
-            const icon = themeToggle.querySelector('i');
-            const form = document.getElementById('registrationForm');
-            const uniFields = document.getElementById('uniFields');
-            const extFields = document.getElementById('extFields');
-            const typeUniBtn = document.getElementById('type-uni-btn');
-            const typeExtBtn = document.getElementById('type-ext-btn');
-            const gymIdDisplay = document.getElementById('gymIdDisplay');
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const form = document.getElementById('registrationForm');
+        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('phoneNumber');
+            const validPhone = /^(\+251(9|7)\d{8}|0(9|7)\d{8})$/.test(phone.value.trim());
             
-            let currentMemberType = 'university';
-            let nextIdCounter = 1;
-
-            // --- 1. Fetch Current User Count (For ID Generation) ---
-            try {
-                const res = await fetch('http://localhost:3000/users');
-                const users = await res.json();
-                nextIdCounter = users.length + 1;
-                updateGymIdDisplay();
-            } catch (err) {
-                console.error("Failed to connect to JSON Server:", err);
-                gymIdDisplay.textContent = "Error: Start JSON Server";
+            if (!validPhone) {
+                phone.classList.add('is-invalid');
+                phone.focus();
+                return; 
+            } else {
+                phone.classList.remove('is-invalid');
             }
 
-            // --- 2. Theme Setup ---
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-mode');
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            }
-
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-mode');
-                if (body.classList.contains('dark-mode')) {
-                    icon.classList.remove('fa-moon');
-                    icon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    icon.classList.remove('fa-sun');
-                    icon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'light');
-                }
-            });
-
-            // --- 3. Gym ID Generation Logic ---
-            function updateGymIdDisplay() {
-                const prefix = currentMemberType === 'university' ? 'DBU' : 'EXT';
-                const year = new Date().getFullYear();
-                const counter = String(nextIdCounter).padStart(4, '0');
-                gymIdDisplay.textContent = `${prefix}-${year}-${counter}`;
-            }
-
-            // --- 4. Dynamic Field Toggling ---
-            function toggleMemberType(type) {
-                currentMemberType = type;
-                typeUniBtn.classList.toggle('active', type === 'university');
-                typeExtBtn.classList.toggle('active', type === 'external');
-                uniFields.classList.toggle('d-none', type === 'external');
-                extFields.classList.toggle('d-none', type === 'university');
-
-                updateGymIdDisplay();
-
-                document.getElementById('uniID').required = (type === 'university');
-                document.getElementById('department').required = (type === 'university');
-                document.getElementById('nationalID').required = (type === 'external');
-                document.getElementById('address').required = (type === 'external');
-            }
-
-            typeUniBtn.addEventListener('click', () => toggleMemberType('university'));
-            typeExtBtn.addEventListener('click', () => toggleMemberType('external'));
-
-            // --- 5. Helper: Convert Image to Base64 ---
-            const convertToBase64 = (file) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = (error) => reject(error);
-                });
-            };
-
-            // --- 6. Helper: Calculate Expiry Date ---
-            const calculateExpiry = (planType) => {
-                const date = new Date();
-                if (planType === 'Monthly') date.setMonth(date.getMonth() + 1);
-                else if (planType === '3Months') date.setMonth(date.getMonth() + 3);
-                else if (planType === '6Months') date.setMonth(date.getMonth() + 6);
-                else if (planType === '1Year') date.setFullYear(date.getFullYear() + 1);
-                return date.toISOString().split('T')[0]; // Format YYYY-MM-DD
-            };
-
-            // --- 7. Form Submission ---
-            form.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (!form.checkValidity()) {
-                    form.classList.add('was-validated');
-                    return;
-                }
-
-                // Handle Image Upload
-                const fileInput = document.getElementById('profileImage');
-                let base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="; // Default placeholder
-                
-                if (fileInput.files.length > 0) {
-                    try {
-                        base64Image = await convertToBase64(fileInput.files[0]);
-                    } catch (err) {
-                        console.error("Image conversion failed", err);
-                        alert("Failed to upload image.");
-                        return;
-                    }
-                }
-
-                // Construct User Object
-                const today = new Date().toISOString().split('T')[0];
-                const planType = document.getElementById('membershipType').value;
-                const membershipId = gymIdDisplay.textContent;
-
-                const newUser = {
-                    role: "user",
-                    fullName: document.getElementById('fullName').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phoneNumber').value,
-                    password: document.getElementById('password').value,
-                    gender: document.getElementById('gender').value,
-                    profileImage: base64Image,
-                    
-                    isUniversityMember: (currentMemberType === 'university'),
-                    universityId: currentMemberType === 'university' ? document.getElementById('uniID').value : null,
-                    department: currentMemberType === 'university' ? document.getElementById('department').value : null,
-                    
-                    nationalId: currentMemberType === 'external' ? document.getElementById('nationalID').value : null,
-                    address: currentMemberType === 'external' ? document.getElementById('address').value : null,
-                    
-                    membershipId: membershipId,
-                    discountPercentage: (currentMemberType === 'university' ? 20 : 0),
-                    membershipType: planType,
-                    membershipStatus: "active",
-                    joinDate: today,
-                    expiryDate: calculateExpiry(planType),
-                    paymentStatus: "Paid" 
-                };
-
-                // Send POST Request
-                try {
-                    const response = await fetch('http://localhost:3000/users', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(newUser)
-                    });
-
-                    if (response.ok) {
-                        alert(`Success! Member registered with ID: ${membershipId}. Redirecting to Login...`);
-                        window.location.href = '../login/login.html';
-                    } else {
-                        throw new Error('Server responded with error');
-                    }
-                } catch (error) {
-                    console.error("Registration failed:", error);
-                    alert("Registration failed. Ensure JSON Server is running.");
-                }
-            });
+            if(!validatePassword()) { document.getElementById('password').focus(); return; }
+            if(!form.checkValidity()) { form.classList.add('was-validated'); return; }
+            modal.show();
         });
+
+        // Toggles
+        const uniBtn = document.getElementById('type-uni-btn');
+        const extBtn = document.getElementById('type-ext-btn');
+        let currentType = 'university';
+        
+        const prices = {
+            'Monthly': 300,
+            '3Months': 800,
+            '6Months': 1500,
+            '1Year': 2500
+        };
+
+        function toggle(type) {
+            currentType = type;
+            uniBtn.classList.toggle('active', type=='university');
+            extBtn.classList.toggle('active', type=='external');
+            document.getElementById('uniFields').classList.toggle('d-none', type!='university');
+            document.getElementById('extFields').classList.toggle('d-none', type!='external');
+            
+            document.getElementById('uniID').required = (type=='university');
+            document.getElementById('department').required = (type=='university');
+            document.getElementById('nationalID').required = (type=='external');
+            document.getElementById('address').required = (type=='external');
+            
+            updatePrice();
+            generateId();
+        }
+        uniBtn.addEventListener('click', () => toggle('university'));
+        extBtn.addEventListener('click', () => toggle('external'));
+
+        document.getElementById('membershipType').addEventListener('change', updatePrice);
+        
+        function updatePrice() {
+            const plan = document.getElementById('membershipType').value;
+            let cost = prices[plan] || 0; 
+            if(currentType === 'university') cost *= 0.8;
+            document.getElementById('priceDisplay').textContent = `${cost} ETB`;
+            document.getElementById('modalPayAmount').textContent = `${cost} ETB`;
+        }
+
+        const restrictText = (e) => e.target.value = e.target.value.replace(/[0-9]/g, '');
+        document.getElementById('fullName').addEventListener('input', restrictText);
+        document.getElementById('department').addEventListener('input', restrictText);
+
+        document.getElementById('phoneNumber').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9+]/g, '');
+            this.classList.remove('is-invalid');
+            let num = this.value;
+            document.getElementById('payPhoneTele').value = num;
+            document.getElementById('payPhoneMpesa').value = num;
+        });
+
+        const passInput = document.getElementById('password');
+        passInput.addEventListener('input', validatePassword);
+        function validatePassword() {
+            const val = passInput.value;
+            const len = val.length >= 8;
+            const cmplx = /[0-9]/.test(val) && /[!@#$%^&*]/.test(val);
+            document.getElementById('req-len').className = `requirement ${len?'valid':'invalid'}`;
+            document.getElementById('req-num').className = `requirement ${cmplx?'valid':'invalid'}`;
+            return len && cmplx;
+        }
+
+        // --- FIXED ID GENERATION LOGIC ---
+        let dbuNextId = 1;
+        let extNextId = 1;
+
+        try { 
+            const res = await fetch('http://localhost:3000/users'); 
+            const users = await res.json(); 
+            // Separate Counts for DBU vs EXT
+            const dbuCount = users.filter(u => u.membershipId && u.membershipId.startsWith('DBU')).length;
+            const extCount = users.filter(u => u.membershipId && u.membershipId.startsWith('EXT')).length;
+            dbuNextId = dbuCount + 1;
+            extNextId = extCount + 1;
+        } catch(e) {}
+
+        function generateId() {
+            const isUni = currentType === 'university';
+            const prefix = isUni ? 'DBU' : 'EXT';
+            const count = isUni ? dbuNextId : extNextId; // Pick correct counter
+            const yr = new Date().getFullYear();
+            const cnt = String(count).padStart(4,'0');
+            document.getElementById('gymIdDisplay').textContent = `${prefix}-${yr}-${cnt}`;
+        }
+        generateId(); // Initial call
+
+        window.finalizeRegistration = async function() {
+            const convertBase64 = (file) => new Promise((res,rej) => {
+                const r = new FileReader(); r.readAsDataURL(file); r.onload=()=>res(r.result); r.onerror=rej;
+            });
+            let img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==";
+            const f = document.getElementById('profileImage').files[0];
+            if(f) img = await convertBase64(f);
+
+            const newUser = {
+                role: 'user',
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phoneNumber').value,
+                password: document.getElementById('password').value,
+                gender: document.getElementById('gender').value,
+                membershipType: document.getElementById('membershipType').value,
+                membershipId: document.getElementById('gymIdDisplay').textContent,
+                isUniversityMember: currentType === 'university',
+                universityId: document.getElementById('uniID').value,
+                department: document.getElementById('department').value,
+                nationalId: document.getElementById('nationalID').value,
+                address: document.getElementById('address').value,
+                profileImage: img,
+                joinDate: new Date().toISOString().split('T')[0],
+                expiryDate: new Date(new Date().setMonth(new Date().getMonth()+1)).toISOString().split('T')[0],
+                
+                // --- PENDING STATUS ---
+                membershipStatus: 'pending',
+                paymentStatus: 'Paid'
+            };
+            
+            try {
+                await fetch('http://localhost:3000/users', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(newUser)});
+                window.location.href='../pending/pending.html'; // Redirect to Pending Page
+            } catch(e) { alert('JSON Server Error'); }
+        }
+
+        const themeBtn = document.getElementById('theme-toggle');
+        themeBtn.addEventListener('click', ()=>{
+            document.body.classList.toggle('dark-mode');
+            themeBtn.querySelector('i').className = document.body.classList.contains('dark-mode') ? 'fas fa-sun' : 'fas fa-moon';
+        });
+    });

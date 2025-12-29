@@ -5,16 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DBU Gym - Recover Password</title>
     
-    <!-- Bootstrap 5 CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="forgot.css">
-
 </head>
 <body>
 
-    <!-- Header & Toggle -->
+    <div id="fakeEmailNotification" class="email-toast">
+        <div class="email-toast-icon"><i class="fas fa-envelope"></i></div>
+        <div class="email-content">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <h6>DBU Gym Support</h6>
+                <span class="email-time">now</span>
+            </div>
+            <p>Your verification code is: <strong id="notifCode" class="text-primary"></strong>. Do not share this.</p>
+        </div>
+    </div>
+
     <header class="container simple-header position-relative">
         <h3 class="fw-bold m-0"><span class="highlight"><i class="fas fa-dumbbell me-2"></i>DBU</span> Gym</h3>
         <button id="theme-toggle" aria-label="Toggle Dark Mode">
@@ -22,11 +29,9 @@
         </button>
     </header>
 
-    <!-- Main Content -->
     <div class="auth-wrapper">
         <div class="auth-card">
             
-            <!-- Step 1: Enter Email -->
             <div id="step1" class="step-container">
                 <div class="text-center mb-4">
                     <i class="fas fa-lock fa-3x mb-3"></i>
@@ -49,12 +54,11 @@
                 </form>
             </div>
 
-            <!-- Step 2: Verify Code -->
             <div id="step2" class="step-container d-none">
                 <div class="text-center mb-4">
                     <i class="fas fa-envelope-open-text fa-3x highlight mb-3"></i>
                     <h2 class="h4 fw-bold">Verify Your Email</h2>
-                    <p class="text-muted small">We sent a 6-digit code to <strong id="displayEmail"></strong>.<br>Check your console (F12) for the code.</p>
+                    <p class="text-muted small">We sent a 6-digit code to <strong id="displayEmail"></strong>.<br>Check your notification bar.</p>
                 </div>
 
                 <div id="codeAlert" class="alert alert-danger d-none py-2 small" role="alert">
@@ -76,7 +80,6 @@
                 </form>
             </div>
 
-            <!-- Step 3: Reset Password -->
             <div id="step3" class="step-container d-none">
                 <div class="text-center mb-4">
                     <i class="fas fa-key fa-3x text-success mb-3"></i>
@@ -108,7 +111,6 @@
                 </form>
             </div>
 
-            <!-- Success State -->
             <div id="successState" class="step-container d-none text-center">
                 <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
                 <h2 class="h4 fw-bold">Password Reset!</h2>
@@ -121,9 +123,9 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="./forgot.js"> </script>
+    <script src="forgot.js">
+    </script>
 </body>
 </html>

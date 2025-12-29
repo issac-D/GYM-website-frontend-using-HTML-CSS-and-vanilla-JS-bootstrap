@@ -1,8 +1,7 @@
-
         // --- State Variables ---
         let currentCode = null;
         let userEmail = "";
-        let userId = null; // We need this to know WHICH user to update
+        let userId = null;
 
         // --- Core Functions ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -10,7 +9,7 @@
             setupForms();
         });
 
-        // 1. Theme Toggle Logic (Kept same)
+        // 1. Theme Logic
         function setupThemeToggle() {
             const body = document.body;
             const themeToggle = document.getElementById('theme-toggle');
@@ -39,12 +38,10 @@
             const emailInput = document.getElementById('email');
             const emailFeedback = document.getElementById('emailFeedback');
 
-            // --- STEP 1: Email Check ---
+            // --- STEP 1: Check Email ---
             document.getElementById('emailForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const emailBtn = e.target.querySelector('button');
-                
-                // Reset Errors
                 emailInput.classList.remove('is-invalid');
                 
                 if (!emailInput.checkValidity()) {
@@ -52,28 +49,25 @@
                     return;
                 }
 
-                // UI Loading State
+                // Loading UI
                 const originalBtnText = emailBtn.innerHTML;
                 emailBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
                 emailBtn.disabled = true;
 
                 try {
-                    // 1. Check if email exists in DB
+                    // Check DB
                     const response = await fetch(`http://localhost:3000/users?email=${emailInput.value}`);
                     const users = await response.json();
 
                     if (users.length === 0) {
-                        // Email NOT found
                         emailInput.classList.add('is-invalid');
                         emailFeedback.textContent = "No account found with this email address.";
                     } else {
-                        // Email FOUND
                         userEmail = users[0].email;
-                        userId = users[0].id; // Store ID for step 3
+                        userId = users[0].id; // Needed for update
                         
                         generateAndSendCode();
                         
-                        // Transition
                         document.getElementById('displayEmail').textContent = userEmail;
                         step1.classList.add('d-none');
                         step2.classList.remove('d-none');
@@ -87,22 +81,18 @@
                 }
             });
 
-            // Back to Step 1
             document.getElementById('backToStep1').addEventListener('click', (e) => {
                 e.preventDefault();
                 step2.classList.add('d-none');
                 step1.classList.remove('d-none');
             });
 
-            // Resend Code
             document.getElementById('resendLink').addEventListener('click', (e) => {
                 e.preventDefault();
                 generateAndSendCode();
-                alert('A new code has been sent (check console).');
             });
 
-
-            // --- STEP 2: Verify Code (Kept Same) ---
+            // --- STEP 2: Verify Code ---
             document.getElementById('codeForm').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const inputCode = document.getElementById('verificationCode').value;
@@ -118,8 +108,7 @@
                 }
             });
 
-
-            // --- STEP 3: Reset Password (REAL UPDATE) ---
+            // --- STEP 3: Reset Password (API Call) ---
             document.getElementById('passwordForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const newPass = document.getElementById('newPassword').value;
@@ -129,7 +118,6 @@
 
                 passAlert.classList.add('d-none');
 
-                // Validation
                 if (newPass.length < 6) {
                     passAlert.textContent = "Password must be at least 6 characters.";
                     passAlert.classList.remove('d-none');
@@ -141,20 +129,15 @@
                     return;
                 }
 
-                // UI Loading
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Updating...';
 
                 try {
-                    // Send PATCH request to update ONLY the password
+                    // Update Password in DB
                     const response = await fetch(`http://localhost:3000/users/${userId}`, {
                         method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            password: newPass
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: newPass })
                     });
 
                     if (response.ok) {
@@ -175,17 +158,30 @@
             });
         }
 
-        // Helper: Generate Code
+        // --- HELPER: SHOW NOTIFICATION INSTEAD OF CONSOLE ---
         function generateAndSendCode() {
             currentCode = Math.floor(100000 + Math.random() * 900000);
-            console.log(`%c[DBU Gym] Verification Code for ${userEmail}: ${currentCode}`, "color: #51CCF9; font-weight: bold; font-size: 14px;");
+            
+            // UI Notification Logic
+            const notif = document.getElementById('fakeEmailNotification');
+            const codeDisplay = document.getElementById('notifCode');
+            
+            codeDisplay.textContent = currentCode;
+            notif.classList.add('show');
+
+            // Play a notification sound (Optional, but cool for mobile)
+            // let audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            // audio.play().catch(e => console.log('Audio blocked'));
+
+            // Auto-hide after 8 seconds
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 8000);
         }
 
-        // Helper: Toggle Password Visibility
         window.togglePassword = (fieldId) => {
             const input = document.getElementById(fieldId);
             const icon = input.nextElementSibling.querySelector('i');
-            
             if (input.type === "password") {
                 input.type = "text";
                 icon.className = 'fas fa-eye-slash';
