@@ -70,7 +70,7 @@ The system comes pre-populated with the following accounts for testing:
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@admin` | `admin` |
+| **Admin** | `admin@gmail.com` | `admin` |
 | **User** | `abebe@example.com` | `password123` |
 
 > **Note:** You can register new users via the "Sign Up" page.
@@ -82,6 +82,7 @@ The system comes pre-populated with the following accounts for testing:
 │   ├── adminPage.html      
 │   ├── admin.css 
 │   ├── admin.js
+│   ├── approvals.html
 │   ├── settings/           
 |   │   ├── editProfile.html      
 |   │   ├── editProfile.css 
@@ -96,6 +97,8 @@ The system comes pre-populated with the following accounts for testing:
 |   ├── forgot.html      
 │   ├── forgot.css 
 │   ├── forgot.js
+├── pending/
+│   └── pending.html
 ├── login/           
 |   ├── login.html      
 │   ├── login.css 
@@ -104,6 +107,8 @@ The system comes pre-populated with the following accounts for testing:
 |   ├── register.html      
 │   ├── register.css 
 │   ├── register.js
+│   ├── payment.js
+│   ├── payment.css
 ├── user/                  
 │   ├── userDashboard.html      
 │   ├── userDashboard.css 
@@ -115,3 +120,12 @@ The system comes pre-populated with the following accounts for testing:
 ├── index.html              
 ├── package.json            
 └── README.md               # Documentation
+
+```
+# Group Members _ _ _ _ _ _ _ _ID
+```
+1. Yishaq Damtew -----------DBU1601755
+2. Yirgalem Zegeye----------DBU1601753
+3. Ahmed Seid --------------DBU1601509
+4. Abrham Belay ------------DBU1601483
+```
